@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.ListView?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
+<?import javafx.scene.layout.AnchorPane?>
+
+<AnchorPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="400.0" prefWidth="600.0" xmlns="http://javafx.com/javafx/17" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.tictactoe.tictactoemanager.ManagerController">
+    <TabPane layoutY="51.0" prefHeight="349.0" prefWidth="600.0" tabClosingPolicy="UNAVAILABLE">
+        <Tab text="Server Log">
+            <AnchorPane>
+                <TextArea fx:id="ta" layoutX="159.0" layoutY="57.0" prefHeight="371.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            </AnchorPane>
+        </Tab>
+        <Tab text="Active Clients">
+            <AnchorPane>
+                <ListView fx:id="clientListView" layoutX="21.0" layoutY="14.0" prefHeight="325.0" prefWidth="600.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0" />
+            </AnchorPane>
+        </Tab>
+        <Tab text="Active Games">
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                <ListView fx:id="gameListView" layoutX="182.0" layoutY="-11.0" prefHeight="320.0" prefWidth="600.0"
+                          AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0"
+                          AnchorPane.topAnchor="0.0"/>
+            </AnchorPane>
+        </Tab>
+    </TabPane>
+    <Button fx:id="startButton" layoutX="14.0" layoutY="14.0" mnemonicParsing="false" onMouseClicked="#onStartButtonClicked" text="Start Server" />
+</AnchorPane>
