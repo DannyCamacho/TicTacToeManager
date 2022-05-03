@@ -73,7 +73,7 @@ public class TicTacToeManager {
         for (Game game : games) {
             if (Objects.equals(game.getGameName(), gameName)) {
                 game.addPlayer(userName);
-                output.writeObject(new UpdateGame(game.getGameName(), game.getUserTokens(), game.getStartingToken(), game.getCurrentToken(), game.getBoardState(), "N"));
+                output.writeObject(new UpdateGame(game.getGameName(), game.getUserTokens(), game.getStartingToken(), game.getCurrentToken(), game.getBoardState(), "Connect To Game"));
                 output.flush();
             }
         }
