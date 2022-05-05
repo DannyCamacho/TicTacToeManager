@@ -92,7 +92,10 @@ public class TicTacToeManager {
     }
 
     void getGameList(String userName) throws IOException {
-        output.writeObject(new GameListResult(userName, gameNames));
+        String [] gameList = new String [gameNames.size()];
+        int i = 0;
+        for (String game : gameNames) gameList[i++] = game;
+        output.writeObject(new GameListResult(userName, gameList));
         output.flush();
         print("\nPlayer (" + userName + ") game list updated");
     }
