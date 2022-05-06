@@ -45,11 +45,14 @@ public class TicTacToeManager {
     void addUserName(String userName) {
         userNames.add(userName);
         Platform.runLater(() -> controller.addClient(userName));
+        print("\nPlayer (" + userName + ") has connected");
     }
 
     void removeUserName(String userName) {
         userNames.remove(userName);
         Platform.runLater(() -> controller.removeClient(userName));
+        print("\nPlayer (" + userName + ") has disconnected");
+
     }
 
     void addGame(String gameName) {
