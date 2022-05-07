@@ -6,8 +6,8 @@ import java.net.*;
 import java.util.Objects;
 
 public class ReadThread extends Thread {
-    private ObjectInputStream input;
     private final TicTacToeManager manager;
+    private ObjectInputStream input;
 
     public ReadThread(Socket socket, TicTacToeManager manager) {
         this.manager = manager;
@@ -25,24 +25,23 @@ public class ReadThread extends Thread {
                 if (message instanceof ServerConnection) {
                     if (Objects.equals(((ServerConnection)message).connectType(), "Player")) {
                         if (((ServerConnection)message).connection()) {
-                            manager.addUserName(((ServerConnection)message).userName());
+                            manager.addUserName((ServerConnection) message);
                         } else {
-                            manager.removeUserName(((ServerConnection)message).userName());
+                            manager.removeUserName((ServerConnection) message);
                         }
                     }
                 } else if (message instanceof ConnectToGame) {
                     if (((ConnectToGame)message).connection()) {
-                        manager.addGame(((ConnectToGame)message).gameName());
-                        manager.addPlayerToGame(((ConnectToGame)message).gameName(), ((ConnectToGame)message).userName());
+                        manager.addGame((ConnectToGame)message);
                     } else {
-                        manager.removePlayerFromGame(((ConnectToGame)message).gameName(), ((ConnectToGame)message).userName());
+                        manager.removePlayerFromGame((ConnectToGame)message);
                     }
                 } else if (message instanceof GameListRequest) {
-                    manager.getGameList(((GameListRequest)message).userName());
+                    manager.getGameList((GameListRequest)message);
                 } else if (message instanceof PlayerMoveResult) {
                     manager.updateGame((PlayerMoveResult)message);
                 } else if (message instanceof UpdateGame) {
-                    manager.newGame((UpdateGame)message);
+                    manager.receiveUpdateGameMessage((UpdateGame)message);
                 }
             } catch (IOException | ClassNotFoundException ex) {
                 manager.print("\nError reading from server: " + ex.getMessage()+ "\n");
