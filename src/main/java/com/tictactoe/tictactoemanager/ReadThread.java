@@ -36,6 +36,8 @@ public class ReadThread extends Thread {
                     } else {
                         manager.removePlayerFromGame((ConnectToGame)message);
                     }
+                } else if (message instanceof ChatMessage) {
+                    manager.sendChatMessage((ChatMessage)message);
                 } else if (message instanceof GameListRequest) {
                     manager.getGameList((GameListRequest)message);
                 } else if (message instanceof PlayerMoveResult) {
