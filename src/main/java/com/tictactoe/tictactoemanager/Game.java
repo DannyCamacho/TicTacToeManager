@@ -48,22 +48,12 @@ public class Game {
         this.boardState = boardState;
     }
 
-    public Map<String, Character> getUsers() {
+    public Map<String, Character> getUserTokens() {
         return userTokens;
     }
 
-    public String [] getUserTokens() {
-        String [] users = new String[userTokens.size() * 2];
-
-        AtomicInteger i = new AtomicInteger();
-        userTokens.forEach((key, value) -> {
-            users[i.intValue()] = key;
-            i.incrementAndGet();
-            users[i.intValue()] = String.valueOf(value);
-            i.incrementAndGet();
-        });
-
-        return users;
+    public char getUserToken(String userName) {
+        return userTokens.get(userName);
     }
 
     public void addPlayer(String userName) {

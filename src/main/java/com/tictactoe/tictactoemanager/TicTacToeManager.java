@@ -13,15 +13,19 @@ public class TicTacToeManager {
     private final int port;
     private ObjectOutputStream output;
     private final ManagerController controller;
-    private final Set<String> userNames = new HashSet<>();
-    private final Set<String> lobby = new HashSet<>();
-    private final Set<String> gameNames = new HashSet<>();
-    private final Set<Game> games = new HashSet<>();
+    private final Set<String> userNames;
+    private final Set<String> lobby;
+    private final Set<String> gameNames;
+    private final Map<String, Game> games;
 
     public TicTacToeManager(String hostname, int port, ManagerController controller) {
         this.hostname = hostname;
         this.port = port;
         this.controller = controller;
+        userNames = new HashSet<>();
+        lobby = new HashSet<>();
+        gameNames = new HashSet<>();
+        games = new HashMap<>();
     }
 
     public void execute() {
@@ -44,17 +48,16 @@ public class TicTacToeManager {
     }
 
     void updateGame(PlayerMoveResult result) throws IOException {
-        for (Game game : games) {
-            if (Objects.equals(game.getGameName(), result.gameName())) {
-                game.setBoardState(result.board());
-                game.setCurrentToken(result.playerToken());
-                output.writeObject(new UpdateGame(game.getGameName(), game.getUserTokens(), game.getCurrentToken(), game.getBoardState(), result.result()));
-                output.flush();
-                if (game.getVsAI() && Objects.equals(result.result(), "N") && game.getCurrentToken() == 'X') {
-                    output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
-                    output.flush();
-                }
-            }
+        Game game = games.get(result.gameName());
+        game.setBoardState(result.board());
+        game.setCurrentToken(result.playerToken());
+        for (String user : game.getUserTokens().keySet()) {
+            output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), result.result()));
+            output.flush();
+        }
+        if (game.getVsAI() && Objects.equals(result.result(), "N") && game.getCurrentToken() == 'X') {
+            output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
+            output.flush();
         }
     }
 
@@ -75,12 +78,14 @@ public class TicTacToeManager {
     }
 
     void addGame(ConnectToGame message) throws IOException {
-        for (Game game : games)
-            if (Objects.equals(game.getGameName(), message.gameName())) {
+        for (String game : games.keySet()) {
+            if (Objects.equals(game, message.gameName())) {
                 addPlayerToGame(message);
                 return;
             }
-        games.add(new Game(message.gameName(), message.VsAI()));
+        }
+
+        games.put(message.gameName(), new Game(message.gameName(), message.VsAI()));
         gameNames.add(message.gameName());
         Platform.runLater(() -> controller.addGame(message.gameName()));
         print("\nGame created: " + message.gameName());
@@ -88,7 +93,7 @@ public class TicTacToeManager {
     }
 
     void removeGame(String gameName) {
-        games.removeIf(game -> Objects.equals(game.getGameName(), gameName));
+        games.remove(gameName);
         gameNames.remove(gameName);
         Platform.runLater(() -> controller.removeGame(gameName));
         print("\nGame removed: " + gameName);
@@ -97,26 +102,20 @@ public class TicTacToeManager {
     void addPlayerToGame(ConnectToGame message) throws IOException {
         output.writeObject(new ConnectToGame(message.gameName(), message.userName(), true, message.VsAI()));
         output.flush();
-        for (Game game : games) {
-            if (Objects.equals(game.getGameName(), message.gameName())) {
-                game.addPlayer(message.userName());
-                output.writeObject(new UpdateGame(message.gameName(), game.getUserTokens(), game.getCurrentToken(), game.getBoardState(), "Initialize"));
-                output.flush();
-            }
-        }
+        Game game = games.get(message.gameName());
+        game.addPlayer(message.userName());
         lobby.remove(message.userName());
         print("\nPlayer (" + message.userName() + ") has joined game: " + message.gameName());
+        output.writeObject(new UpdateGame(message.gameName(), message.userName(), game.getUserToken(message.userName()), game.getBoardState(), "Initialize"));
+        output.flush();
         output.writeObject(new ChatMessage("Board", message.gameName(), message.userName(), "Connected to Game " + message.gameName() + "."));
         output.flush();
         sendChatMessage((new ChatMessage("Connect", message.gameName(), message.userName(), message.userName() + " has joined the game.\n")));
     }
 
     void removePlayerFromGame(ConnectToGame message) throws IOException {
-        for (Game game : games) {
-            if (Objects.equals(game.getGameName(), message.gameName())) {
-                game.removePlayer(message.userName());
-            }
-        }
+        Game game = games.get(message.gameName());
+        game.removePlayer(message.userName());
         lobby.add(message.userName());
         print("\nPlayer (" + message.userName() + ") has left game: " + message.gameName());
         sendChatMessage((new ChatMessage("Connect", message.gameName(), message.userName(), message.userName() + " has left the game.\n")));
@@ -134,22 +133,24 @@ public class TicTacToeManager {
     }
 
     void receiveUpdateGameMessage(UpdateGame message) throws IOException {
-        for (Game game : games) {
-            if (Objects.equals(game.getGameName(), message.gameName())) {
-                if (Objects.equals(message.result(), "End")) {
-                    System.out.println("clearing board for " + game.getGameName());
-                    game.clearBoard();
-                    game.changeStartingToken();
-                    game.changeCurrentToStarting();
-                    System.out.println(game.getBoardState());
-                    output.writeObject(new UpdateGame(game.getGameName(), game.getUserTokens(), game.getCurrentToken(), game.getBoardState(), "End"));
-                    output.flush();
-                    if (game.getVsAI() && game.getCurrentToken() == 'X') {
-                        output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
-                        output.flush();
-                    }
-                } else if (Objects.equals(message.result(), "New")) {
-                    output.writeObject(new UpdateGame(game.getGameName(), game.getUserTokens(), game.getCurrentToken(), game.getBoardState(), "New"));
+        Game game = games.get(message.gameName());
+        if (Objects.equals(message.result(), "End")) {
+            System.out.println("clearing board for " + game.getGameName());
+            game.clearBoard();
+            game.changeStartingToken();
+            game.changeCurrentToStarting();
+            System.out.println(game.getBoardState());
+
+            for (String user : game.getUserTokens().keySet()) {
+                output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), "End"));
+                output.flush();
+            }
+        } else if (Objects.equals(message.result(), "New")) {
+            for (String user : game.getUserTokens().keySet()) {
+                output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), "N"));
+                output.flush();
+                if (game.getVsAI() && game.getCurrentToken() == 'X') {
+                    output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
                     output.flush();
                 }
             }
@@ -157,6 +158,8 @@ public class TicTacToeManager {
     }
 
     void sendChatMessage(ChatMessage message) throws IOException {
+        Game game = games.get(message.gameName());
+
         if (Objects.equals(message.messageType(), "Connect")) {
             if (Objects.equals(message.gameName(), null)) {
                 for (String user : lobby) {
@@ -166,14 +169,10 @@ public class TicTacToeManager {
                     }
                 }
             } else {
-                for (Game game : games) {
-                    if (Objects.equals(game.getGameName(), message.gameName())) {
-                        for (String user : game.getUsers().keySet()) {
-                            if (!Objects.equals(user, message.userName())) {
-                                output.writeObject(new ChatMessage("Board", game.getGameName(), user, message.message()));
-                                output.flush();
-                            }
-                        }
+                for (String user : game.getUserTokens().keySet()) {
+                    if (!Objects.equals(user, message.userName())) {
+                        output.writeObject(new ChatMessage("Board", game.getGameName(), user, message.message()));
+                        output.flush();
                     }
                 }
             }
@@ -184,13 +183,9 @@ public class TicTacToeManager {
             }
         } else if (Objects.equals(message.messageType(), "Board")) {
             {
-                for (Game game : games) {
-                    if (Objects.equals(game.getGameName(), message.gameName())) {
-                        for (String user : game.getUsers().keySet()) {
-                            output.writeObject(new ChatMessage("Board", game.getGameName(), user, message.message()));
-                            output.flush();
-                        }
-                    }
+                for (String user : game.getUserTokens().keySet()) {
+                    output.writeObject(new ChatMessage("Board", game.getGameName(), user, message.message()));
+                    output.flush();
                 }
             }
         }
