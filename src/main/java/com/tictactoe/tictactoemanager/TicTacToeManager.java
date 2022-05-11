@@ -51,11 +51,13 @@ public class TicTacToeManager {
         Game game = games.get(result.gameName());
         game.setBoardState(result.board());
         game.setCurrentToken(result.playerToken());
+        if (!Objects.equals(result.result(), "N")) {
+            game.updateGameHistory(result.result().charAt(0));
+        }
         for (String user : game.getUserTokens().keySet()) {
             output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), result.result()));
             output.flush();
             if (!Objects.equals(result.result(), "N")) {
-                game.updateGameHistory(result.result().charAt(0));
                 output.writeObject(new UpdateGameHistory(game.getGameName(), user, game.getXodWins(), game.getGameHistory()));
                 output.flush();
             }
@@ -113,9 +115,11 @@ public class TicTacToeManager {
         print("\nPlayer (" + message.userName() + ") has joined game: " + message.gameName());
         output.writeObject(new UpdateGame(message.gameName(), message.userName(), game.getUserToken(message.userName()), game.getBoardState(), "Initialize"));
         output.flush();
-        output.writeObject(new ChatMessage("Board", message.gameName(), message.userName(), "Connected to Game " + message.gameName() + "."));
+        output.writeObject(new ChatMessage("Board", message.gameName(), message.userName(), "Connected to Game " + message.gameName() + ".\n"));
         output.flush();
         sendChatMessage((new ChatMessage("ConnectB", message.gameName(), message.userName(), message.userName() + " has joined the game.\n")));
+        output.writeObject(new UpdateGameHistory(game.getGameName(), message.userName(), game.getXodWins(), game.getGameHistory()));
+        output.flush();
     }
 
     void removePlayerFromGame(ConnectToGame message) throws IOException {
@@ -140,11 +144,9 @@ public class TicTacToeManager {
     void receiveUpdateGameMessage(UpdateGame message) throws IOException {
         Game game = games.get(message.gameName());
         if (Objects.equals(message.result(), "End")) {
-            System.out.println("clearing board for " + game.getGameName());
             game.clearBoard();
             game.changeStartingToken();
             game.changeCurrentToStarting();
-            System.out.println(game.getBoardState());
 
             for (String user : game.getUserTokens().keySet()) {
                 output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), "End"));

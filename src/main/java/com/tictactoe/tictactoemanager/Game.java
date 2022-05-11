@@ -56,8 +56,13 @@ public class Game {
         return userTokens.get(userName);
     }
 
-    public int[] getXodWins() {
-        return xodWins;
+    public String [] getXodWins() {
+        String [] xod = new String[3];
+        for (int i = 0; i < 3; ++i) {
+            xod[i] = "" + xodWins[i];
+        }
+
+        return xod;
     }
 
     public String [] getGameHistory() {
