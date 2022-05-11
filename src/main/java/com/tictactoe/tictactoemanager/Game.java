@@ -56,6 +56,18 @@ public class Game {
         return userTokens.get(userName);
     }
 
+    public int[] getXodWins() {
+        return xodWins;
+    }
+
+    public String [] getGameHistory() {
+        String [] history = new String[gameHistory.size()];
+        for (int i = 0; i < gameHistory.size(); ++i) {
+            history[i] = gameHistory.get(i);
+        }
+        return history;
+    }
+
     public void addPlayer(String userName) {
             if (!userTokens.containsValue('O'))
                 userTokens.put(userName, 'O');

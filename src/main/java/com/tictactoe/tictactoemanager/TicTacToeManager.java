@@ -54,6 +54,11 @@ public class TicTacToeManager {
         for (String user : game.getUserTokens().keySet()) {
             output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), result.result()));
             output.flush();
+            if (!Objects.equals(result.result(), "N")) {
+                game.updateGameHistory(result.result().charAt(0));
+                output.writeObject(new UpdateGameHistory(game.getGameName(), user, game.getXodWins(), game.getGameHistory()));
+                output.flush();
+            }
         }
         if (game.getVsAI() && Objects.equals(result.result(), "N") && game.getCurrentToken() == 'X') {
             output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
@@ -66,7 +71,7 @@ public class TicTacToeManager {
         lobby.add(message.userName());
         Platform.runLater(() -> controller.addClient(message.userName()));
         print("\nPlayer (" + message.userName() + ") has connected");
-        sendChatMessage((new ChatMessage("Connect", null, message.userName(), message.userName() + " has joined the lobby.\n")));
+        sendChatMessage((new ChatMessage("ConnectL", null, message.userName(), message.userName() + " has joined the lobby.\n")));
     }
 
     void removeUserName(ServerConnection message) throws IOException {
@@ -74,7 +79,7 @@ public class TicTacToeManager {
         lobby.remove(message.userName());
         Platform.runLater(() -> controller.removeClient(message.userName()));
         print("\nPlayer (" + message.userName() + ") has disconnected");
-        sendChatMessage((new ChatMessage("Connect", null, message.userName(), message.userName() + " has left the lobby.\n")));
+        sendChatMessage((new ChatMessage("ConnectL", null, message.userName(), message.userName() + " has left the lobby.\n")));
     }
 
     void addGame(ConnectToGame message) throws IOException {
@@ -110,7 +115,7 @@ public class TicTacToeManager {
         output.flush();
         output.writeObject(new ChatMessage("Board", message.gameName(), message.userName(), "Connected to Game " + message.gameName() + "."));
         output.flush();
-        sendChatMessage((new ChatMessage("Connect", message.gameName(), message.userName(), message.userName() + " has joined the game.\n")));
+        sendChatMessage((new ChatMessage("ConnectB", message.gameName(), message.userName(), message.userName() + " has joined the game.\n")));
     }
 
     void removePlayerFromGame(ConnectToGame message) throws IOException {
@@ -118,7 +123,7 @@ public class TicTacToeManager {
         game.removePlayer(message.userName());
         lobby.add(message.userName());
         print("\nPlayer (" + message.userName() + ") has left game: " + message.gameName());
-        sendChatMessage((new ChatMessage("Connect", message.gameName(), message.userName(), message.userName() + " has left the game.\n")));
+        sendChatMessage((new ChatMessage("ConnectB", message.gameName(), message.userName(), message.userName() + " has left the game.\n")));
     }
 
     void getGameList(GameListRequest message) throws IOException {
@@ -160,20 +165,18 @@ public class TicTacToeManager {
     void sendChatMessage(ChatMessage message) throws IOException {
         Game game = games.get(message.gameName());
 
-        if (Objects.equals(message.messageType(), "Connect")) {
-            if (Objects.equals(message.gameName(), null)) {
-                for (String user : lobby) {
-                    if (!Objects.equals(user, message.userName())) {
-                        output.writeObject(new ChatMessage("Lobby", null, user, message.message()));
-                        output.flush();
-                    }
+        if (Objects.equals(message.messageType(), "ConnectL")) {
+            for (String user : lobby) {
+                if (!Objects.equals(user, message.userName())) {
+                    output.writeObject(new ChatMessage("Lobby", null, user, message.message()));
+                    output.flush();
                 }
-            } else {
-                for (String user : game.getUserTokens().keySet()) {
-                    if (!Objects.equals(user, message.userName())) {
-                        output.writeObject(new ChatMessage("Board", game.getGameName(), user, message.message()));
-                        output.flush();
-                    }
+            }
+        } else if (Objects.equals(message.messageType(), "ConnectB")) {
+            for (String user : game.getUserTokens().keySet()) {
+                if (!Objects.equals(user, message.userName())) {
+                    output.writeObject(new ChatMessage("Board", game.getGameName(), user, message.message()));
+                    output.flush();
                 }
             }
         } else if (Objects.equals(message.messageType(), "Lobby")) {
