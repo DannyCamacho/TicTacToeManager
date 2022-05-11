@@ -1,7 +1,6 @@
 package com.tictactoe.tictactoemanager;
 
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 
 public class Game {
     private final String gameName;
@@ -61,7 +60,6 @@ public class Game {
         for (int i = 0; i < 3; ++i) {
             xod[i] = "" + xodWins[i];
         }
-
         return xod;
     }
 

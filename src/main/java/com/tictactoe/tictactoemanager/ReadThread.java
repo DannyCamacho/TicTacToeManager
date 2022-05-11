@@ -22,6 +22,7 @@ public class ReadThread extends Thread {
         while (true) {
             try {
                 Object message = input.readObject();
+                System.out.println(message);
                 if (message instanceof ServerConnection) {
                     if (Objects.equals(((ServerConnection)message).connectType(), "Player")) {
                         if (((ServerConnection)message).connection()) {

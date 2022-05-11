@@ -73,7 +73,7 @@ public class TicTacToeManager {
         lobby.add(message.userName());
         Platform.runLater(() -> controller.addClient(message.userName()));
         print("\nPlayer (" + message.userName() + ") has connected");
-        sendChatMessage((new ChatMessage("ConnectL", null, message.userName(), message.userName() + " has joined the lobby.\n")));
+        sendChatMessage((new ChatMessage("ConnectL", "", message.userName(), message.userName() + " has joined the lobby.\n")));
     }
 
     void removeUserName(ServerConnection message) throws IOException {
@@ -81,7 +81,7 @@ public class TicTacToeManager {
         lobby.remove(message.userName());
         Platform.runLater(() -> controller.removeClient(message.userName()));
         print("\nPlayer (" + message.userName() + ") has disconnected");
-        sendChatMessage((new ChatMessage("ConnectL", null, message.userName(), message.userName() + " has left the lobby.\n")));
+        sendChatMessage((new ChatMessage("ConnectL", "", message.userName(), message.userName() + " has left the lobby.\n")));
     }
 
     void addGame(ConnectToGame message) throws IOException {
@@ -91,7 +91,6 @@ public class TicTacToeManager {
                 return;
             }
         }
-
         games.put(message.gameName(), new Game(message.gameName(), message.VsAI()));
         gameNames.add(message.gameName());
         Platform.runLater(() -> controller.addGame(message.gameName()));
@@ -133,11 +132,13 @@ public class TicTacToeManager {
     void getGameList(GameListRequest message) throws IOException {
         String[] gameList = new String[gameNames.size()];
         int i = 0;
-        for (String game : gameNames) gameList[i++] = game;
+        for (String game : gameNames) {
+            gameList[i++] = game;
+        }
         output.writeObject(new GameListResult(message.userName(), gameList));
         output.flush();
         print("\nPlayer (" + message.userName() + ") game list updated");
-        output.writeObject(new ChatMessage("Lobby", null, message.userName(), "Game List has been updated.\n"));
+        output.writeObject(new ChatMessage("Lobby", "", message.userName(), "Game List has been updated.\n"));
         output.flush();
     }
 
@@ -170,7 +171,7 @@ public class TicTacToeManager {
         if (Objects.equals(message.messageType(), "ConnectL")) {
             for (String user : lobby) {
                 if (!Objects.equals(user, message.userName())) {
-                    output.writeObject(new ChatMessage("Lobby", null, user, message.message()));
+                    output.writeObject(new ChatMessage("Lobby", "Lobby", user, message.message()));
                     output.flush();
                 }
             }
@@ -183,7 +184,7 @@ public class TicTacToeManager {
             }
         } else if (Objects.equals(message.messageType(), "Lobby")) {
             for (String user : lobby) {
-                output.writeObject(new ChatMessage("Lobby", null, user, message.message()));
+                output.writeObject(new ChatMessage("Lobby", "Lobby", user, message.message()));
                 output.flush();
             }
         } else if (Objects.equals(message.messageType(), "Board")) {
