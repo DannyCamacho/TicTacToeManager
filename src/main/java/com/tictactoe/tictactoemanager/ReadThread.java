@@ -3,7 +3,6 @@ package com.tictactoe.tictactoemanager;
 import com.tictactoe.message.*;
 import java.io.*;
 import java.net.*;
-import java.util.Objects;
 
 public class ReadThread extends Thread {
     private final TicTacToeManager manager;
@@ -22,14 +21,11 @@ public class ReadThread extends Thread {
         while (true) {
             try {
                 Object message = input.readObject();
-                System.out.println(message);
                 if (message instanceof ServerConnection) {
-                    if (Objects.equals(((ServerConnection)message).connectType(), "Player")) {
-                        if (((ServerConnection)message).connection()) {
-                            manager.addUserName((ServerConnection) message);
-                        } else {
-                            manager.removeUserName((ServerConnection) message);
-                        }
+                    if (((ServerConnection)message).connection()) {
+                        manager.addUser((ServerConnection)message);
+                    } else {
+                        manager.removeUser((ServerConnection)message);
                     }
                 } else if (message instanceof ConnectToGame) {
                     if (((ConnectToGame)message).connection()) {

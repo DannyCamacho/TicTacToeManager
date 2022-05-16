@@ -8,6 +8,7 @@ public class Game {
     private char startingToken;
     private char currentToken;
     private char [] boardState;
+    private final Set<String> users;
     private final Map<String, Character> userTokens;
     private final int [] xodWins;
     private final ArrayList<String> gameHistory;
@@ -18,6 +19,7 @@ public class Game {
         startingToken = 'O';
         currentToken = 'O';
         boardState = new char[9];
+        users = new HashSet<>();
         userTokens = new HashMap<>();
         xodWins = new int[] { 0, 0, 0 };
         gameHistory = new ArrayList<>();
@@ -35,60 +37,31 @@ public class Game {
         return currentToken;
     }
 
-    public void setCurrentToken(char currentToken) {
-        this.currentToken = currentToken;
+    public Set<String> getUsers() {
+        return users;
     }
 
     public char[] getBoardState() {
         return boardState;
     }
 
-    public void setBoardState(char[] boardState) {
-        this.boardState = boardState;
+    public void setCurrentToken(char currentToken) {
+        this.currentToken = currentToken;
     }
 
-    public Map<String, Character> getUserTokens() {
-        return userTokens;
+    public void setBoardState(char[] boardState) {
+        this.boardState = boardState;
     }
 
     public char getUserToken(String userName) {
         return userTokens.get(userName);
     }
 
-    public String [] getXodWins() {
-        String [] xod = new String[3];
-        for (int i = 0; i < 3; ++i) {
-            xod[i] = "" + xodWins[i];
-        }
-        return xod;
-    }
-
-    public String [] getGameHistory() {
-        String [] history = new String[gameHistory.size()];
-        for (int i = 0; i < gameHistory.size(); ++i) {
-            history[i] = gameHistory.get(i);
-        }
-        return history;
-    }
-
-    public void addPlayer(String userName) {
-            if (!userTokens.containsValue('O'))
-                userTokens.put(userName, 'O');
-            else if (!userTokens.containsValue('X') && !vsAI)
-                userTokens.put(userName, 'X');
-            else
-                userTokens.put(userName, 'S');
-    }
-
-    public void removePlayer(String userName) {
-        userTokens.remove(userName);
-    }
-
     public void changeStartingToken() {
         startingToken = startingToken == 'X' ? 'O' : 'X';
     }
 
-    public void changeCurrentToStarting() {
+    public void setCurrentToStarting() {
         currentToken = startingToken;
     }
 
@@ -96,9 +69,37 @@ public class Game {
         boardState = new char[9];
     }
 
+    public void addPlayer(String userName) {
+        users.add(userName);
+        if (!userTokens.containsValue('O'))
+            userTokens.put(userName, 'O');
+        else if (!userTokens.containsValue('X') && !vsAI)
+            userTokens.put(userName, 'X');
+        else
+            userTokens.put(userName, 'S');
+    }
+
+    public void removePlayer(String userName) {
+        users.remove(userName);
+        userTokens.remove(userName);
+    }
+
+    public String [] getXodWins() {
+        String [] xod = new String[3];
+        for (int i = 0; i < 3; ++i) {
+            xod[i] = "" + xodWins[i];
+        } return xod;
+    }
+
+    public String [] getGameHistory() {
+        String [] history = new String[gameHistory.size()];
+        for (int i = 0; i < gameHistory.size(); ++i) {
+            history[i] = gameHistory.get(i);
+        } return history;
+    }
+
     public void updateGameHistory(char result) {
         String s;
-
         switch (result) {
             case 'X' -> { s = "\t\tPlayer X Win\n"; ++xodWins[0]; }
             case 'O' -> { s = "\t\tPlayer O Win\n"; ++xodWins[1]; }

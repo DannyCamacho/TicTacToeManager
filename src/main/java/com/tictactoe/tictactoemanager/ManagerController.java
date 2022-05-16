@@ -23,11 +23,11 @@ public class ManagerController {
         startButton.setVisible(false);
     }
 
-    public void addClient(String user) {
+    public void addUser(String user) {
         clientListView.getItems().add(user);
     }
 
-    public void removeClient(String user) {
+    public void removeUser(String user) {
         clientListView.getItems().remove(user);
     }
 
