@@ -160,10 +160,8 @@ public class TicTacToeManager {
                         output.flush();
                     }
                 } else if (Objects.equals(message.result(), "New")) {
-                    for (String user : game.getUsers()) {
-                        output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), "N"));
+                        output.writeObject(new UpdateGame(game.getGameName(), message.userName(), game.getCurrentToken(), game.getBoardState(), "N"));
                         output.flush();
-                    }
                     if (game.getVsAI() && game.getCurrentToken() == 'X') {
                         output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
                         output.flush();
