@@ -49,6 +49,7 @@ public class TicTacToeManager {
                 game.setBoardState(result.board());
                 game.setCurrentToken(result.playerToken());
                 if (!Objects.equals(result.result(), "N")) {
+                    game.changeStartingToken();
                     game.updateGameHistory(result.result().charAt(0));
                 }
                 for (String user : game.getUsers()) {
@@ -126,11 +127,16 @@ public class TicTacToeManager {
     void removePlayerFromGame(ConnectToGame message) throws IOException {
         for (Game game : games) {
             if (Objects.equals(game.getGameName(), message.gameName())) {
+                game.setReady(message.userName(), false);
                 game.removePlayer(message.userName());
                 sendChatMessage((new ChatMessage("Board", message.gameName(), "", message.userName() + " has left the game.\n")));
                 sendChatMessage((new ChatMessage("Lobby", "", "", message.userName() + " has joined the lobby.\n")));
                 lobby.add(message.userName());
                 print("\nPlayer (" + message.userName() + ") has left game: " + message.gameName());
+                for (String user : game.getUsers()) {
+                    output.writeObject(new UpdateGame(game.getGameName(), user, 'W', game.getBoardState(), "Waiting"));
+                    output.flush();
+                }
             }
         }
     }
@@ -152,16 +158,24 @@ public class TicTacToeManager {
         for (Game game : games) {
             if (Objects.equals(game.getGameName(), message.gameName())) {
                 if (Objects.equals(message.result(), "End")) {
+                    game.setXReady(false);
+                    game.setOReady(false);
                     game.clearBoard();
-                    game.changeStartingToken();
-                    game.setCurrentToStarting();
                     for (String user : game.getUsers()) {
                         output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), "End"));
                         output.flush();
                     }
                 } else if (Objects.equals(message.result(), "New")) {
-                        output.writeObject(new UpdateGame(game.getGameName(), message.userName(), game.getCurrentToken(), game.getBoardState(), "N"));
-                        output.flush();
+                    if (game.getVsAI()) game.setXReady(true);
+                    game.setReady(message.userName(), true);
+                    output.writeObject(new UpdateGame(game.getGameName(), message.userName(), 'W', game.getBoardState(), "Waiting"));
+                    output.flush();
+                    if (game.isReady()) {
+                        for (String user : game.getUsers()) {
+                            output.writeObject(new UpdateGame(game.getGameName(), user, game.getCurrentToken(), game.getBoardState(), "N"));
+                            output.flush();
+                        }
+                    }
                     if (game.getVsAI() && game.getCurrentToken() == 'X') {
                         output.writeObject(new MinimaxMoveSend(game.getGameName(), 'X', game.getBoardState()));
                         output.flush();

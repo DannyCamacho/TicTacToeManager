@@ -5,6 +5,8 @@ import java.util.*;
 public class Game {
     private final String gameName;
     private final boolean vsAI;
+    private boolean xReady;
+    private boolean oReady;
     private char startingToken;
     private char currentToken;
     private char [] boardState;
@@ -16,6 +18,8 @@ public class Game {
     public Game(String gameName, boolean vsAI) {
         this.gameName = gameName;
         this.vsAI = vsAI;
+        xReady = false;
+        oReady = false;
         startingToken = 'O';
         currentToken = 'O';
         boardState = new char[9];
@@ -33,6 +37,10 @@ public class Game {
         return vsAI;
     }
 
+    public boolean isReady() {
+        return xReady && oReady;
+    }
+
     public char getCurrentToken() {
         return currentToken;
     }
@@ -43,6 +51,14 @@ public class Game {
 
     public char[] getBoardState() {
         return boardState;
+    }
+
+    public void setXReady(boolean xReady) {
+        this.xReady = xReady;
+    }
+
+    public void setOReady(boolean oReady) {
+        this.oReady = oReady;
     }
 
     public void setCurrentToken(char currentToken) {
@@ -57,12 +73,16 @@ public class Game {
         return userTokens.get(userName);
     }
 
-    public void changeStartingToken() {
-        startingToken = startingToken == 'X' ? 'O' : 'X';
+    public void setReady(String userName, boolean status) {
+        if (getUserToken(userName) == 'O') {
+            oReady = status;
+        } else {
+            xReady = status;
+        }
     }
 
-    public void setCurrentToStarting() {
-        currentToken = startingToken;
+    public void changeStartingToken() {
+        startingToken = startingToken == 'X' ? 'O' : 'X';
     }
 
     public void clearBoard() {
